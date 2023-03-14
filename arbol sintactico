@@ -1,0 +1,8 @@
+// Arbol sintactico
+digraph {
+	<FNA.Nodo object at 0x000002AA8A50B220> [label=a]
+	<FNA.Nodo object at 0x000002AA8A50BBE0> [label=b]
+	<FNA.Nodo object at 0x000002AA8B258910> [label="."]
+	<FNA.Nodo object at 0x000002AA8B258910> -> <FNA.Nodo object at 0x000002AA8A50B220>
+	<FNA.Nodo object at 0x000002AA8B258910> -> <FNA.Nodo object at 0x000002AA8A50BBE0>
+}
