@@ -1,4 +1,0 @@
-digraph FNA {
-	rankdir=LR size="8,5"
-	24 [label=24 color=blue]
-}

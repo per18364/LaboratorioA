@@ -26,8 +26,8 @@ class State:
             if estado not in self.transiciones[simbolo]:
                 # MAYBE cambiar .add(estado) por = estado
                 self.transiciones[simbolo].add(estado)
-            else:
-                self.transiciones[simbolo] = {estado}
+        else:
+            self.transiciones[simbolo] = {estado}
 
     def add_epsilon_trans(self, estado):
         self.epsilon_transitions.add(estado)
@@ -43,12 +43,12 @@ class State:
 
 
 class FNA:
-    def __init__(self, inicio, final):
-        self.inicio = inicio
+    def __init__(self, inicial, final):
+        self.inicial = inicial
         self.final = final
 
     def match(self, cadena):
-        estados_actuales = {self.inicio}
+        estados_actuales = {self.inicial}
         for simbolo in cadena:
             nuevos_estados = set()
             for state in estados_actuales:
@@ -59,7 +59,7 @@ class FNA:
 
     def __str__(self):
         visitados = set()
-        nodos = [self.inicio]
+        nodos = [self.inicial]
         transiciones = []
 
         print('transiciones: \n')
@@ -88,7 +88,7 @@ class FNA:
 def construir_arbol(postfix):
     stack = []
     for c in postfix:
-        if c == '*' or c == '+' or c == '?':
+        if c == '*' or c == '?' or c == '+':
             child = stack.pop()
             node = Nodo(c, child)
             stack.append(node)
@@ -104,7 +104,7 @@ def construir_arbol(postfix):
 
 
 def print_arbol(nodo, archivo):
-    dot = graphviz.Digraph(comment='Arbol sintactico')
+    dot = graphviz.Digraph(comment='Árbol sintáctico')
     _agregar_nodo(dot, nodo)
     dot.render(archivo, view=True)
 
@@ -125,44 +125,49 @@ def construir_FNA_desde_arbol(nodo):
     if nodo.value == '.':
         afn1 = construir_FNA_desde_arbol(nodo.left)
         afn2 = construir_FNA_desde_arbol(nodo.right)
-        afn1.final.add_epsilon_trans(afn2.inicio)
+        afn1.final.add_epsilon_trans(afn2.inicial)
         afn1.final = afn2.final
         return afn1
     elif nodo.value == '|':
         afn1 = construir_FNA_desde_arbol(nodo.left)
         afn2 = construir_FNA_desde_arbol(nodo.right)
-        inicio = State()
-        inicio.add_epsilon_trans(afn1.inicio)
-        inicio.add_epsilon_trans(afn2.inicio)
+        inicial = State()
+        inicial.add_epsilon_trans(afn1.inicial)
+        inicial.add_epsilon_trans(afn2.inicial)
         final = State()
         afn1.final.add_epsilon_trans(final)
         afn2.final.add_epsilon_trans(final)
-        return FNA(inicio, final)
+        return FNA(inicial, final)
     elif nodo.value == '*':
         afn = construir_FNA_desde_arbol(nodo.left)
-        inicio = State()
+        inicial = State()
         final = State()
-        inicio.add_epsilon_trans(afn.inicio)
-        inicio.add_epsilon_trans(final)
-        afn.final.add_epsilon_trans(afn.inicio)
+        inicial.add_epsilon_trans(afn.inicial)
+        inicial.add_epsilon_trans(final)
+        afn.final.add_epsilon_trans(afn.inicial)
         afn.final.add_epsilon_trans(final)
-        return FNA(inicio, final)
+        return FNA(inicial, final)
     elif nodo.value == '+':
-        afn = construir_FNA_desde_arbol(nodo.left)
-        inicio = State()
+        afn1 = construir_FNA_desde_arbol(nodo.left)
+        afn2 = construir_FNA_desde_arbol(nodo.left)
+        inicial = State()
         final = State()
-        inicio.add_epsilon_trans(afn.inicio)
-        afn.final.add_epsilon_trans(afn.inicio)
-        afn.final.add_epsilon_trans(final)
-        return FNA(inicio, final)
+        inicial.add_trans(nodo.left.value, afn1.final)
+        # inicial.add_epsilon_trans(afn1.inicial)
+        afn1.final.add_epsilon_trans(afn2.inicial)
+        afn1.final.add_epsilon_trans(final)
+        afn2.inicial.add_trans(nodo.left.value, afn2.final)
+        afn2.final.add_epsilon_trans(afn2.inicial)
+        afn2.final.add_epsilon_trans(final)
+        return FNA(inicial, final)
     elif nodo.value == '?':
         afn = construir_FNA_desde_arbol(nodo.left)
-        inicio = State()
+        inicial = State()
         final = State()
-        inicio.add_epsilon_trans(afn.inicio)
-        inicio.add_epsilon_trans(final)
+        inicial.add_epsilon_trans(afn.inicial)
+        inicial.add_epsilon_trans(final)
         afn.final.add_epsilon_trans(final)
-        return FNA(inicio, final)
+        return FNA(inicial, final)
     else:
         estado_inicial = State()
         estado_final = State()
@@ -172,7 +177,7 @@ def construir_FNA_desde_arbol(nodo):
 
 def generar_grafo_FNA(afn):
     visitados = set()
-    nodos = [afn.inicio]
+    nodos = [afn.inicial]
     nodos_finales = {afn.final}
     transiciones = []
 
@@ -186,7 +191,7 @@ def generar_grafo_FNA(afn):
         if nodo in nodos_finales:
             # Doble círculo si es estado final
             nodo_attrs = {'peripheries': '2', 'color': 'red'}
-        elif nodo == afn.inicio:
+        elif nodo == afn.inicial:
             nodo_attrs = {'color': 'blue'}  # Color rojo si es estado inicial
         else:
             nodo_attrs = {}

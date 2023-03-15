@@ -5,7 +5,7 @@ def insert_concat_operator(exp):
         token = exp[i]
         output += token
 
-        if token == '(' or token == '|' or token == '+':
+        if token == '(' or token == '|':
             continue
 
         if i < len(exp) - 1:
